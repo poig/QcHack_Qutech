@@ -10,7 +10,7 @@ logger = get_netqasm_logger()
 ALL_MEASURED = "All qubits measured"
 
 
-def receive_E91_states(conn, epr_socket, socket, n): ###
+def distribute_bb84_states(conn, epr_socket, socket, n): ###
     bit_flips = [None for _ in range(n)]
     key_string = [random.randint(1, 3) for i in range(n)] # string b of Alice
 
@@ -35,8 +35,9 @@ def chsh_corr(n,aliceMeasurementChoices,bobMeasurementChoices):
 def filter_bases(socket, pairs_info):
     bases = [(i, pairs_info[i].basis) for (i, pair) in enumerate(pairs_info)]
 
+    msg = StructuredMessage(header="Bases", payload=bases)
+    socket.send_structured(msg)
     remote_bases = socket.recv_structured().payload
-    socket.send_structured(StructuredMessage("Bases", bases))
 
     for (i, basis), (remote_i, remote_basis) in zip(bases, remote_bases):
         assert i == remote_i
@@ -92,27 +93,26 @@ class PairInfo:
     same_basis: Optional[int] = None
 
     # Whether to use this pair to estimate errors by comparing the outcomes.
-    test_outcome: Optional[bool] = None
+    test_outcome: Optional[int] = None
 
     # Whether measurement outcome is the same as Bob's. (Only for pairs used for error estimation.)
     same_outcome: Optional[bool] = None
 
-
 def main(app_config=None, key_length=16):
     # Socket for classical communication
-    socket = Socket("bob", "alice", log_config=app_config.log_config)
+    socket = Socket("alice", "bob", log_config=app_config.log_config)
     # Socket for EPR generation
-    epr_socket = EPRSocket("alice")
+    epr_socket = EPRSocket("bob")
 
-    bob = NetQASMConnection(
+    alice = NetQASMConnection(
         app_name=app_config.app_name,
         log_config=app_config.log_config,
         epr_sockets=[epr_socket],
     )
 
-    with bob:
+    with alice:
         # IMPLEMENT YOUR SOLUTION HERE
-        bit_flips,basis = receive_E91_states(bob, epr_socket, socket, key_length)
+        bit_flips,basis = distribute_bb84_states(alice, epr_socket, socket, key_length)
     bits = [int(b) for b in bit_flips]
     bases = [int(b) for b in basis]
 
@@ -121,13 +121,16 @@ def main(app_config=None, key_length=16):
         pairs_info.append(
             PairInfo(
                 index=i,
-                basis=int(bases[i]),
+                basis=int(basis[i]),
                 outcome=int(bits[i]),
             )
         )
 
 
-    #socket.send(ALL_MEASURED))
+    m = socket.recv()
+    if m != ALL_MEASURED:
+        logger.info(m)
+        raise RuntimeError("Failed to distribute BB84 states")
 
     pairs_info = filter_bases(socket, pairs_info)
     
@@ -136,6 +139,12 @@ def main(app_config=None, key_length=16):
     
     raw_key = [pair.outcome for pair in pairs_info if not pair.test_outcome]
     logger.info(f"alice raw key: {raw_key}")
+
+    table = []
+    for pair in pairs_info:
+        basis = "X" if pair.basis == 1 else "Z"
+        check = pair.same_outcome if pair.test_outcome else "-"
+        table.append([pair.index, basis, pair.same_basis, pair.outcome, check])
 
     x_basis_count = sum(pair.basis for pair in pairs_info)
     z_basis_count = num_bits - x_basis_count
@@ -154,6 +163,19 @@ def main(app_config=None, key_length=16):
     key_rate_potential = 1 - 2 * h(qber)
 
     return {
+        # Table with one row per generated pair.
+        # Columns:
+        #   - Pair number
+        #   - Measurement basis ("X" or "Z")
+        #   - Same basis as Bob ("True" or "False")
+        #   - Measurement outcome ("0" or "1")
+        #   - Outcome same as Bob ("True", "False" or "-")
+        #       ("-" is when outcomes are not compared)
+        "table": table,
+        # Number of times measured in the X basis.
+        "x_basis_count": x_basis_count,
+        # Number of times measured in the Z basis.
+        "z_basis_count": z_basis_count,
         # Number of times measured in the same basis as Bob.
         "same_basis_count": same_basis_count,
         # Number of pairs chosen to compare measurement outcomes for.
@@ -167,9 +189,10 @@ def main(app_config=None, key_length=16):
         # Raw key.
         # ('Result' of this application. In practice, there'll be post-processing to produce secure shared key.)
         "raw_key": raw_key,
-        # RETURN THE SECRET KEY HERE
+
         "secret_key": raw_key,
     }
+    # RETURN THE SECRET KEY HERE
 
 
 if __name__ == "__main__":
