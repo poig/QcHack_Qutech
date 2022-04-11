@@ -10,6 +10,7 @@ and then copy over the necessary files from the template directory:
 `cp template/src/app_alice.py template/src/app_bob.py template/src/epr_socket.py template/src/eve.py qkd/src
 cp template/config/application.json qkd/config`
 5) (run the application)`qne experiment run exp --timeout 30`
+6) (see the result by going to qkd/exp/results/processed.json or qkd/exp/raw_output/LAST/results.yaml)
 
 **Part 1** basic protocol && Eavesdropper
 
