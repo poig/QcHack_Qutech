@@ -12,7 +12,7 @@ cp template/config/application.json qkd/config`
 **Part 1** basic protocol && Eavesdropper
 
 For Part 1 of the challenge, we have implemented E91 protocol. Below is the summary of how the protocol works. 
-- [x] In noiseless channel if error percentage is less than 20 there is no eve.py active.  
+- [x] In noiseless channel if error percentage is less than 20 there is no eve.py active, so autocheck.py will fail if eve is there.  
 - [ ] In noise channel, but small noise won't have big effect.
 
 1) Making entangled bell state
