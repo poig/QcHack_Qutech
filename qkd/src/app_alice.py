@@ -1,7 +1,11 @@
 from netqasm.logging.glob import get_netqasm_logger
 from netqasm.sdk.external import NetQASMConnection, Socket
+
+from netqasm.sdk.classical_communication.message import StructuredMessage
+from dataclasses import dataclass
 from typing import Optional
 import random
+import logging
 
 from epr_socket import DerivedEPRSocket as EPRSocket
 
@@ -10,20 +14,35 @@ logger = get_netqasm_logger()
 ALL_MEASURED = "All qubits measured"
 
 
-def distribute_bb84_states(conn, epr_socket, socket, n): ###
+#one-time pad technique 
+
+def distribute_bb84_states(conn, epr_socket, socket, n): #[x]
+    '''Making entangled bell state The source centre chooses the EPR pair(Entangled Bell State) |φ+⟩=(1/√2)(|00⟩+|11⟩), 
+        sends the first particle |φ+⟩₁ to Alice and second particle |φ+⟩₂ to Bob.'''
+
     bit_flips = [None for _ in range(n)]
     key_string = [random.randint(1, 3) for i in range(n)] # string b of Alice
 
+    #Alice makes a measurement with a direction randomly chosen between {0, π/8 , π/4}, 
     for i in range(n):
         q = epr_socket.create_keep(1)[0]
-        if key_string[i] == 1:
+        if key_string[i] == 1: #X basis
             q.H()
-        elif key_string[i] == 2:
+        elif key_string[i] == 2: #W basis
             q.S()
             q.H()
-            q.T()
+            q.rot_Z(1,2) # same as q.T() z-rotation angle pi/4
             q.H()
+        elif key_string[i] == 3: #Z basis
+            pass
+        #conn.flush()
         m = q.measure()
+
+        # Ensure that bob has access to the pair, before we measure
+        # IMPORTANT: this is the key distinction between BB84, BB92
+        # The quantum processor must actually have shared the pair
+        # prior to Alice's measurement, otherwise she will have implicitly
+        # prepared a specific state by measuring it prior to Bob's access.
         conn.flush()
         bit_flips[i] = int(m)
     return bit_flips, key_string
@@ -32,7 +51,7 @@ def distribute_bb84_states(conn, epr_socket, socket, n): ###
 def chsh_corr(n,aliceMeasurementChoices,bobMeasurementChoices):
     pass
 
-def filter_bases(socket, pairs_info):
+def filter_bases(socket, pairs_info,one_time_pad):
     bases = [(i, pairs_info[i].basis) for (i, pair) in enumerate(pairs_info)]
 
     msg = StructuredMessage(header="Bases", payload=bases)
@@ -40,30 +59,39 @@ def filter_bases(socket, pairs_info):
     remote_bases = socket.recv_structured().payload
 
     for (i, basis), (remote_i, remote_basis) in zip(bases, remote_bases):
-        assert i == remote_i
-        pairs_info[i].same_basis = basis == remote_basis
+        assert i == remote_i #nothing happen if its true
+        if basis == 1 and remote_basis == 1:
+            pairs_info[i].same_basis = True
+        elif basis == 2 and remote_basis == 2:
+            pairs_info[i].same_basis = True
+        elif basis == 3 and remote_basis == 3:
+            pairs_info[i].same_basis = True
+        else:
+            pairs_info[i].same_basis = False
+
+        #pairs_info[i].same_basis = basis == remote_basis
 
     #corr = chsh_corr(n, pairs_info.basis,remote_bases)
     return pairs_info#, corr
 
 def estimate_error_rate(socket, pairs_info, num_test_bits):
     same_basis_indices = [pair.index for pair in pairs_info if pair.same_basis]
-    test_indices = random.sample(
-        same_basis_indices, min(num_test_bits, len(same_basis_indices))
-    )
+
+    #using not same basis as testpair G1
+    test_indices = [pair.index for pair in pairs_info if not(pair.same_basis)]
     for pair in pairs_info:
         pair.test_outcome = pair.index in test_indices
 
     test_outcomes = [(i, pairs_info[i].outcome) for i in test_indices]
 
-    logger.info(f"alice finding {num_test_bits} test bits")
-    logger.info(f"alice test indices: {test_indices}")
-    logger.info(f"alice test outcomes: {test_outcomes}")
+    #logger.info(f"alice finding {num_test_bits} test bits")
+    #logger.info(f"alice test indices: {test_indices}")
+    #logger.info(f"alice test outcomes: {test_outcomes}")
 
     socket.send_structured(StructuredMessage("Test indices", test_indices))
     target_test_outcomes = socket.recv_structured().payload
     socket.send_structured(StructuredMessage("Test outcomes", test_outcomes))
-    logger.info(f"alice target_test_outcomes: {target_test_outcomes}")
+    #logger.info(f"alice target_test_outcomes: {target_test_outcomes}")
 
     num_error = 0
     for (i1, t1), (i2, t2) in zip(test_outcomes, target_test_outcomes):
@@ -76,8 +104,9 @@ def estimate_error_rate(socket, pairs_info, num_test_bits):
 
     return pairs_info, (num_error / num_test_bits)
 
-class PairInfo:
-    """Information that Bob has about one generated pair.
+@dataclass
+class PairInfo: #[x]
+    """Information that Alice has about one generated pair.
     The information is filled progressively during the protocol."""
 
     # Index in list of all generated pairs.
@@ -90,15 +119,18 @@ class PairInfo:
     outcome: int
 
     # Whether Bob measured his qubit in the same basis or not.
-    same_basis: Optional[int] = None
+    same_basis: Optional[bool] = None
 
     # Whether to use this pair to estimate errors by comparing the outcomes.
-    test_outcome: Optional[int] = None
+    test_outcome: Optional[bool] = None
 
     # Whether measurement outcome is the same as Bob's. (Only for pairs used for error estimation.)
     same_outcome: Optional[bool] = None
 
 def main(app_config=None, key_length=16):
+    '''fileHandler = logging.FileHandler("alice_logfile.log")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(fileHandler)'''
     # Socket for classical communication
     socket = Socket("alice", "bob", log_config=app_config.log_config)
     # Socket for EPR generation
@@ -110,14 +142,19 @@ def main(app_config=None, key_length=16):
         epr_sockets=[epr_socket],
     )
 
+    secret_key = None
+    n = key_length*3
+
     with alice:
         # IMPLEMENT YOUR SOLUTION HERE
-        bit_flips,basis = distribute_bb84_states(alice, epr_socket, socket, key_length)
+        bit_flips,basis = distribute_bb84_states(alice, epr_socket, socket, n)
+
+    #They record the measurement result and broadcast the measurement basis which they used, through the classical channel.
     bits = [int(b) for b in bit_flips]
     bases = [int(b) for b in basis]
 
     pairs_info = []
-    for i in range(key_length):
+    for i in range(n):
         pairs_info.append(
             PairInfo(
                 index=i,
@@ -125,72 +162,44 @@ def main(app_config=None, key_length=16):
                 outcome=int(bits[i]),
             )
         )
-
-
+    
+    #make sure both finish measurement
     m = socket.recv()
     if m != ALL_MEASURED:
         logger.info(m)
-        raise RuntimeError("Failed to distribute BB84 states")
+        raise RuntimeError("Failed to distribute E91 states")
 
-    pairs_info = filter_bases(socket, pairs_info)
+
+    one_time_pad = [1,2,3]
+    pairs_info = filter_bases(socket, pairs_info,one_time_pad)
     
-    pairs_info, error_rate = estimate_error_rate(socket, pairs_info, num_test_bits)
+    pairs_info, error_rate = estimate_error_rate(socket, pairs_info, n)
     logger.info(f"alice error rate: {error_rate}")
     
     raw_key = [pair.outcome for pair in pairs_info if not pair.test_outcome]
-    logger.info(f"alice raw key: {raw_key}")
 
-    table = []
-    for pair in pairs_info:
-        basis = "X" if pair.basis == 1 else "Z"
-        check = pair.same_outcome if pair.test_outcome else "-"
-        table.append([pair.index, basis, pair.same_basis, pair.outcome, check])
-
-    x_basis_count = sum(pair.basis for pair in pairs_info)
-    z_basis_count = num_bits - x_basis_count
     same_basis_count = sum(pair.same_basis for pair in pairs_info)
+    #logger.info(f"alice finding {num_test_bits} test bits")
 
-    outcome_comparison_count = sum(
-        pair.test_outcome for pair in pairs_info if pair.same_basis
-    )
-    diff_outcome_count = outcome_comparison_count - sum(
-        pair.same_outcome for pair in pairs_info if pair.test_outcome
-    )
-    if outcome_comparison_count == 0:
-        qber = 1
-    else:
-        qber = (diff_outcome_count) / outcome_comparison_count
-    key_rate_potential = 1 - 2 * h(qber)
+    outcome_comparison_count = sum(pair.test_outcome for pair in pairs_info if pair.same_basis)
+
+    diff_outcome_count = outcome_comparison_count - sum(pair.same_outcome for pair in pairs_info if pair.test_outcome)
+
+    key = [pair.outcome for pair in pairs_info if pair.same_basis]
+
+    my_key = ''.join(map(str,key))[:key_length]
+
 
     return {
-        # Table with one row per generated pair.
-        # Columns:
-        #   - Pair number
-        #   - Measurement basis ("X" or "Z")
-        #   - Same basis as Bob ("True" or "False")
-        #   - Measurement outcome ("0" or "1")
-        #   - Outcome same as Bob ("True", "False" or "-")
-        #       ("-" is when outcomes are not compared)
-        "table": table,
-        # Number of times measured in the X basis.
-        "x_basis_count": x_basis_count,
-        # Number of times measured in the Z basis.
-        "z_basis_count": z_basis_count,
         # Number of times measured in the same basis as Bob.
         "same_basis_count": same_basis_count,
         # Number of pairs chosen to compare measurement outcomes for.
         "outcome_comparison_count": outcome_comparison_count,
-        # Number of compared outcomes with equal values.
         "diff_outcome_count": diff_outcome_count,
-        # Estimated Quantum Bit Error Rate (QBER).
-        "qber": qber,
-        # Rate of secure key that can in theory be extracted from the raw key.
-        "key_rate_potential": key_rate_potential,
+        "error_rate" : error_rate,
         # Raw key.
         # ('Result' of this application. In practice, there'll be post-processing to produce secure shared key.)
-        "raw_key": raw_key,
-
-        "secret_key": raw_key,
+        "secret_key": my_key,
     }
     # RETURN THE SECRET KEY HERE
 
