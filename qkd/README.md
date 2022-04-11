@@ -13,7 +13,7 @@ cp template/config/application.json qkd/config`
 
 For Part 1 of the challenge, we have implemented E91 protocol. Below is the summary of how the protocol works. 
 - [x] In noiseless channel if error percentage is less than 20 there is no eve.py active.  
-- [ ] In noise channel 
+- [ ] In noise channel, but small noise won't have big effect.
 
 1) Making entangled bell state
 The source centre chooses the EPR pair(Entangled Bell State) |φ+⟩=(1/√2)(|00⟩+|11⟩), sends the first particle |φ+⟩₁ to Alice and second particle |φ+⟩₂ to Bob.
