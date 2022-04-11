@@ -9,7 +9,7 @@ and then copy over the necessary files from the template directory:
 cp template/config/application.json qkd/config`
 5) (run the application)`qne experiment run exp --timeout 30`
 
-**Part 1**
+**Part 1** basic protocol && Eavesdropper
 
 For Part 1 of the challenge, we have implemented E91 protocol. Below is the summary of how the protocol works. 
 - [x] In noiseless channel if error percentage is less than 20 there is no eve.py active.  
@@ -26,7 +26,7 @@ The source centre chooses the EPR pair(Entangled Bell State) |φ+⟩=(1/√2)(|0
 
 5) If the quantum channel is safe, G₂ can be used as the raw keys because Alice and Bob can receive the same measurements. Both Alice and Bob agree on that the measurement |0⟩ represents the classical bit 0, while the measurement |1⟩ represents the classical bit 1, and thus get their key string.
 
-**Part 2**
+**Part 2** Noisy qubits
  
 Noise is inherent part of the current NISQ hardware. Our idea is to implement the protocol with for error correction. Surface code is a 2D error correcting code that can error correct both bit-flip and phase-flip errors and it is quite robust. It has the advantage that the size of the surface code can be varied based on the availability of number of physical qubits, thus can make use of available qubits to the maximum extent. Finding simulator results by extending our implementation of E91 protocol with surface code can be promising to work with NISQ computers.
 
