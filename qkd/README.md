@@ -18,7 +18,7 @@ For Part 1 of the challenge, we have implemented E91 protocol. Below is the summ
 1) Making entangled bell state
 The source centre chooses the EPR pair(Entangled Bell State) |φ+⟩=(1/√2)(|00⟩+|11⟩), sends the first particle |φ+⟩₁ to Alice and second particle |φ+⟩₂ to Bob.
 
-2) Alice makes a measurement with a direction randomly chosen between {0, π/8 , π/4}, whereas Bob makes a measurement with a direction randomly chosen between {−π/8 , 0, π/8}. They record the measurement result and broadcast the measurement basis which they used, through the classical channel.
+2) Alice makes a measurement with a direction randomly chosen between {0, π/8 , π/4}, whereas Bob makes a measurement with a direction randomly chosen between {−π/8 , 0, π/8}. They record the measurement result and broadcast the measurement basis which they used, through the classical channel.(can apply one-time-pad)
 
 3) Thus, Alice and Bob now know each other's choice. They divide the measurement result into two groups: one is the decoy qubits G₁ where they choose different measurement basis and another is the raw key qubits G₂ where they choose the same measurement basis.
 
