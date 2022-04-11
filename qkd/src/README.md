@@ -4,7 +4,7 @@
 (need to register)`pip3 install squidasm==0.8.4 --extra-index-url https://pypi.netsquid.org`<br>
 (if any install problem happen)`pip3 install "netsquid==1.1.5" "pydynaa==1.0.0" "netsquid-nv>=9.2.0" --extra-index-url https://pypi.netsquid.org -e "git+https://gitlab.com/wkozlowski-tudelft/netsquid-magic.git@57bb20a206704ee1a4885b60e059ae9660bc7890#egg=netsquid-magic"`
 3) (create the application)`qne application create qkd alice bob`    
-and then copy over the necessary files from the template directory:
+and then copy over the necessary files from the template directory:   
 `cp template/src/app_alice.py template/src/app_bob.py template/src/epr_socket.py template/src/eve.py qkd/src
 cp template/config/application.json qkd/config`
 5) (run the application)`qne experiment run exp --timeout 30`
