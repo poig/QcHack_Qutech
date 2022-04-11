@@ -51,7 +51,7 @@ def distribute_bb84_states(conn, epr_socket, socket, n): #[x]
 def chsh_corr(n,aliceMeasurementChoices,bobMeasurementChoices):
     pass
 
-def filter_bases(socket, pairs_info,one_time_pad):
+def filter_bases(socket, pairs_info):
     bases = [(i, pairs_info[i].basis) for (i, pair) in enumerate(pairs_info)]
 
     msg = StructuredMessage(header="Bases", payload=bases)
@@ -143,7 +143,7 @@ def main(app_config=None, key_length=16):
     )
 
     secret_key = None
-    n = key_length*3
+    n = key_length*6
 
     with alice:
         # IMPLEMENT YOUR SOLUTION HERE
@@ -170,8 +170,8 @@ def main(app_config=None, key_length=16):
         raise RuntimeError("Failed to distribute E91 states")
 
 
-    one_time_pad = [1,2,3]
-    pairs_info = filter_bases(socket, pairs_info,one_time_pad)
+    
+    pairs_info = filter_bases(socket, pairs_info)
     
     pairs_info, error_rate = estimate_error_rate(socket, pairs_info, n)
     logger.info(f"alice error rate: {error_rate}")
