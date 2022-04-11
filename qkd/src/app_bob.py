@@ -132,7 +132,7 @@ def main(app_config=None, key_length=16):
     )
 
     secret_key = None
-    n = key_length * 3
+    n = key_length * 6
 
     with bob:
         # IMPLEMENT YOUR SOLUTION HERE
