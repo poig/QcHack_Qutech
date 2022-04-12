@@ -17,7 +17,7 @@ error_percentage:[37.5, 37.5, 31.25, 25.0, 50.0, 37.5, 43.75, 37.5, 37.5, 25.0]
     min: 25.0   
 
 
-noise_qubit(0.9 fid):   
+noise_qubit(0.9 fid):(no_error_correction)   
 no_eve:   
 qubit_usage:[94.0, 98.0, 74.0, 85.0, 102.0, 99.0, 97.0, 92.0, 82.0, 91.0]   
 error_percentage:[0.0, 0.0, 6.25, 6.25, 0.0, 18.75, 0.0, 0.0, 12.5, 6.25]   
