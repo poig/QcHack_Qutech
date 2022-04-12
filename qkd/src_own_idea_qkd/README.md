@@ -1,4 +1,4 @@
-is same as E91, but test with same basis, can add as many basis type as possible, but will use more qubit_usage. good at stopping eve.   
+is same as E91, but test with same basis, can add as many basis type as possible, but will use more qubit_usage. should be 100% stopping eve, unless eve can create a new EPR pairs. 
    
    
 noiseless:   
