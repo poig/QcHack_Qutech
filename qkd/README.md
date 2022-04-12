@@ -17,10 +17,10 @@ cp template/config/application.json qkd/config`
 For Part 1 of the challenge, we have implemented E91 protocol. Below is the summary of how the protocol works. 
 - [x] In noiseless channel if error percentage is less than 20(which can test with **big_test.py** that loop though 100time simulation and find the maximum error percentage) there is no **eve.py** active, so **autocheck.py** will fail if eve is there, but can just see if same_basis_code is correct or not.  
     
-without eve 100 loop error percentage:(max: 38.75)(avg: 17.825)(16 over 20 percentage)   
+without eve 100 loop error percentage:(max: 27.5)(avg: 17.825)(16 over 20 percentage)   
 [20.0, 22.5, 17.5, 15.0, 25.0, 16.25, 22.5, 15.0, 17.5, 20.0, 7.5, 17.5, 20.0, 18.75, 21.25, 13.75, 13.75, 18.75, 18.75, 21.25, 13.75, 17.5, 18.75, 12.5, 20.0, 13.75, 12.5, 17.5, 18.75, 16.25, 18.75, 11.25, 20.0, 18.75, 15.0, 18.75, 20.0, 11.25, 17.5, 21.25, 13.75, 20.0, 7.5, 22.5, 17.5, 20.0, 22.5, 26.25, 23.75, 20.0, 15.0, 15.0, 16.25, 16.25, 16.25, 17.5, 13.75, 22.5, 18.75, 16.25, 16.25, 21.25, 22.5, 23.75, 18.75, 20.0, 26.25, 25.0, 20.0, 21.25, 18.75, 11.25, 12.5, 15.0, 12.5, 25.0, 12.5, 8.75, 20.0, 8.75, 23.75, 13.75, 18.75, 18.75, 15.0, 10.0, 13.75, 17.5, 20.0, 11.25, 20.0, 22.5, 17.5, 27.5, 17.5, 20.0, 26.25, 13.75, 17.5, 20.0]  
    
-with eve 100 loop error percentage:(max:27.5)(avg: 28.1492)(8 eve success lower 20 percentage)   
+with eve 100 loop error percentage:(max:38.75)(avg: 28.1492)(8 eve success lower 20 percentage)   
 [31.25, 33.75, 23.75, 32.5, 31.25, 27.5, 20.0, 30.0, 23.75, 36.25, 36.25, 21.25, 31.25, 23.75, 26.25, 27.5, 35.0, 28.74, 27.5, 31.25, 30.0, 27.5, 30.0, 25.0, 23.75, 32.5, 28.74, 28.74, 31.25, 27.5, 28.74, 27.5, 26.25, 20.0, 35.0, 21.25, 38.75, 31.25, 27.5, 30.0, 27.5, 30.0, 30.0, 26.25, 21.25, 22.5, 26.25, 32.5, 27.5, 32.5, 37.5, 26.25, 28.74, 28.74, 30.0, 32.5, 30.0, 30.0, 23.75, 27.5, 23.75, 15.0, 18.75, 36.25, 25.0, 36.25, 28.74, 25.0, 25.0, 23.75, 37.5, 31.25, 23.75, 21.25, 20.0, 18.75, 31.25, 28.74, 20.0, 26.25, 31.25, 25.0, 21.25, 27.5, 37.5, 30.0, 26.25, 25.0, 32.5, 23.75, 31.25, 35.0, 30.0, 16.25, 32.5, 26.25, 37.5, 32.5, 25.0, 31.25]
 - [ ] In noise channel, but small noise won't have big effect. (< 0.9)
 
