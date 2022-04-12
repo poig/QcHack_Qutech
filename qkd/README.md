@@ -15,7 +15,7 @@ cp template/config/application.json qkd/config`
 **Part 1** basic protocol && Eavesdropper
 
 For Part 1 of the challenge, we have implemented E91 protocol. Below is the summary of how the protocol works. 
-- [x] In noiseless channel if error percentage is less than 20(which can test with **big_test.py** that loop though 100time simulation and find the maximum error percentage) there is no **eve.py** active, so **autocheck.py** will fail if eve is there.  
+- [x] In noiseless channel if error percentage is less than 20(which can test with **big_test.py** that loop though 100time simulation and find the maximum error percentage) there is no **eve.py** active, so **autocheck.py** will fail if eve is there, but can just see if basis_code is correct or not.  
     
 without eve 100 loop error percentage:(max: 38.75)(avg: 17.825)(16 over 20 percentage)   
 [20.0, 22.5, 17.5, 15.0, 25.0, 16.25, 22.5, 15.0, 17.5, 20.0, 7.5, 17.5, 20.0, 18.75, 21.25, 13.75, 13.75, 18.75, 18.75, 21.25, 13.75, 17.5, 18.75, 12.5, 20.0, 13.75, 12.5, 17.5, 18.75, 16.25, 18.75, 11.25, 20.0, 18.75, 15.0, 18.75, 20.0, 11.25, 17.5, 21.25, 13.75, 20.0, 7.5, 22.5, 17.5, 20.0, 22.5, 26.25, 23.75, 20.0, 15.0, 15.0, 16.25, 16.25, 16.25, 17.5, 13.75, 22.5, 18.75, 16.25, 16.25, 21.25, 22.5, 23.75, 18.75, 20.0, 26.25, 25.0, 20.0, 21.25, 18.75, 11.25, 12.5, 15.0, 12.5, 25.0, 12.5, 8.75, 20.0, 8.75, 23.75, 13.75, 18.75, 18.75, 15.0, 10.0, 13.75, 17.5, 20.0, 11.25, 20.0, 22.5, 17.5, 27.5, 17.5, 20.0, 26.25, 13.75, 17.5, 20.0]  
